@@ -1,0 +1,38 @@
+checkout
+
+- HEAD가 가리키는 곳을 바꿈
+- working directory, staging 덮어쓰기
+- 방법
+  - terminal: git checkout 커밋ID
+  - git graph: 우클릭 checkout
+  - git graph: 브랜치 더블클릭 (브랜치 이동)
+
+
+
+reset
+
+- HEAD가 가리키는 브랜치가 가리키는 곳을 바꿈
+- merge 취소할 때 사용
+- 방법
+  - terminal: git reset --hard 커밋ID
+  - git branch: 우클릭 reset current branch to this commit
+
+
+
+merge
+
+1. main으로 checkout
+2. 새 브랜치에서 우클릭 merge into current branch
+
+
+
+3-way merge
+
+- merge
+- rebase
+  -> 다 결과가 같아야 함
+
+
+
+remote tracking branch 
+- origin/main
