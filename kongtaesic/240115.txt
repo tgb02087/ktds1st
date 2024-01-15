@@ -1,0 +1,19 @@
+
+head는 현재 버전
+main은 마지막 버전
+
+버전은 현재 stage arae의 스냅샷이다
+
+checkout은 head를 바꾼다
+
+reset은 head가 가리키는 브랜치를 바꾼다
+
+참고 : git reflog
+
+base는 공통의 부모를 뜻한다
+
+git은 3-way merge를 한다
+
+pull = fetch + merge
+fetch는 그냥 다운로드 받는 것이다
+
