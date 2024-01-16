@@ -1,0 +1,136 @@
+<필시>
+
+field()는 맨 왼쪽에 있는것이 몇번째 인덱스에 있는가를 나타낸다.
+예시) field('A', 'B', 'A', 'C') = 2
+
+order by를 할 경우,  NULL은 가장 작은 값으로 인식이 된다.
+
+or와 and 중에서 우선순위는 and가 더 높다.
+
+join할 경우, using()를 사용하여 조건을 간편하게 이용할 수 있다.
+예시) p.name = o.name => using(name)
+
+-----------------------
+<실습>
+
+use classicmodels;
+
+select lastName from employees;
+
+select lastName, firstName, jobTitle, concat(lastName, ', ' ,firstName) as 'fullName' from employees;
+
+select * from employees;
+
+select contactLastName, contactFirstName from customers ORDER BY contactLastName;
+
+select contactLastName, contactFirstName from customers ORDER BY contactLastName desc, contactFirstName;
+
+select orderNumber, orderLineNumber, quantityOrdered * priceEach from orderdetails ORDER BY quantityOrdered * priceEach desc;
+
+select orderNumber, status from orders ORDER BY FIELD(status, 'In Process', 'On Hold', 'Cancelled', 'Resolved', 'Disputed', 'Shipped');
+
+select * from orders ORDER BY comments;
+
+select DISTINCT lastName from employees ORDER BY lastName;
+
+select DISTINCT state, city from customers WHERE state is not null ORDER BY state, city;
+
+select customername, country, state from customers WHERE country = 'USA' and state = 'CA';
+
+select customername, country, state, creditlimit from customers WHERE country = 'USA' and state = 'CA' and creditlimit > 100;
+
+select 1 or 0 and 0 from customers; 
+
+select customername, country, state from customers WHERE country = 'USA' or state = 'CA';
+
+select customername, country, state, creditlimit from customers WHERE country in('USA', 'Franse') and creditlimit > 100;
+
+select officeCode, city, phone, country from offices WHERE country not in('USA', 'France') ORDER BY city;
+
+select productCode, productName, buyPrice from products WHERE buyPrice BETWEEN 90 and 100;
+
+select orderNumber, requiredDate, status from orders WHERE requireddate BETWEEN '2003-01-01' and '2003-01-21';
+
+select employeeNumber, lastName, firstName from employees WHERE firstName LIKE 'a%';
+
+select employeeNumber, lastName, firstName from employees WHERE lastName LIKE '%on%';
+
+select employeeNumber, lastName, firstName from employees WHERE firstName LIKE 'T_m';
+
+select employeeNumber, lastName, firstName from employees WHERE lastName not LIKE 'B%';
+
+select productCode, productName from products WHERE productCode LIKE '%\_20%';
+
+select customerNumber, customerName, creditLimit from customers ORDER BY creditLimit desc limit 5;
+
+select customerName, country, salesRepEmployeeNumber from customers WHERE salesRepEmployeeNumber is not null ORDER BY customerName;
+
+select CONCAT(lastName, ', ', firstName) as 'Full Name' from employees ORDER BY `Full Name`;
+
+select orderNumber as 'Order no.', priceEach * quantityOrdered as 'Total' from orderdetails ORDER BY `Order no.`, `Total`;
+
+select e.firstName, e.lastName from employees e ORDER BY e.firstName;
+
+select  productCode, productName, textDescription from products t1
+join productlines t2 on t1.productline = t2.productline;
+
+select t1.orderNumber, t1.status, sum(quantityOrdered * priceEach) as 'total' from orders t1
+join orderdetails t2 on t1.orderNumber = t2.orderNumber
+GROUP BY t1.orderNumber;
+
+select orderNumber, orderDate, orderLineNumber, productName, quantityOrdered, priceEach from products p1
+join (
+    select o2.*, o1.orderDate from orders o1
+    join orderdetails o2 on o1.orderNumber = o2.orderNumber
+) p2 on p1.productCode = p2.productCode
+ORDER BY orderNumber, orderLineNumber;
+
+select orderNumber, productName, msrp, priceEach from products p
+join orderdetails o USING(productCode)
+WHERE p.msrp > o.priceEach and p.productCode = 's10_1678';
+
+select c.customerNumber, customerName, orderNumber from customers c
+left join orders o on c.customerNumber = o.customerNumber;
+
+select c.customerNumber, customerName, orderNumber, status from customers c
+left join orders o on c.customerNumber = o.customerNumber
+WHERE o.orderNumber is not null;
+
+select employeeNumber, customerNumber from customers c
+RIGHT JOIN employees e on c.salesRepEmployeeNumber = e.employeeNumber
+ORDER BY e.employeeNumber;
+
+select employeeNumber, customerNumber from customers c
+RIGHT JOIN employees e on c.salesRepEmployeeNumber = e.employeeNumber
+WHERE c.customerNumber is null
+ORDER BY e.employeeNumber;
+
+select CONCAT(m.lastName, ', ', m.firstName) as 'Manager', CONCAT(e.lastName, ', ', e.firstName) as 'Direct report' from employees e 
+join employees m on m.employeeNumber = e.reportsTo
+ORDER BY `Manager`;
+
+select c1.city, c1.customerName, c2.customerName from customers c1
+join customers c2 using(city)
+WHERE c1.customername < c2.customername
+ORDER BY c1.city;
+
+select status from orders
+GROUP BY status;
+
+select status, COUNT(status) from orders
+GROUP BY status;
+
+select o.status, SUM(od.priceEach * od.quantityOrdered) as 'amount' from orders o
+join orderdetails od USING(orderNumber)
+GROUP BY o.status;
+
+select YEAR(o.orderDate), SUM(od.priceEach * od.quantityOrdered) as 'amount' from orders o
+join orderdetails od USING(orderNumber)
+WHERE o.status = 'Shipped'
+GROUP BY YEAR(o.orderDate);
+
+select YEAR(o.orderDate), o.status, SUM(od.priceEach * od.quantityOrdered) as 'total' from orders o
+join orderdetails od USING(orderNumber)
+GROUP BY YEAR(o.orderDate), o.status
+ORDER BY YEAR(o.orderDate), o.status;
+
