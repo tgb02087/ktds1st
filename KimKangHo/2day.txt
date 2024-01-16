@@ -1,0 +1,180 @@
+use classicmodels;
+
+SELECT lastName from employees;
+
+SELECT lastName, firstName, jobTitle from employees;
+
+SELECT * FROM employees;
+
+## SELECT
+SELECT 1+1;
+
+SELECT now();
+
+SELECT concat(lastName,', ',firstName)as fullName from employees;
+
+SELECT contactLastName, contactFirstName FROM customers ORDER BY contactLastName;
+
+## ORDER BY
+SELECT contactLastName, contactFirstName FROM customers ORDER BY contactLastName DESC;
+
+SELECT contactLastName, contactFirstName FROM customers ORDER BY contactLastName DESC, contactFirstName;
+
+SELECT orderNumber, orderlinenumber, quantityOrdered * priceEach As sales from orderdetails ORDER BY sales DESC;
+
+SELECT FIELD('B','A','B','C');
+
+SELECT orderNumber, status FROM orders ORDER BY FIELD(status, 'In Process', 'On Hold', 'Cancelled', 'Resolved', 'Disputed', 'Shipped');
+
+SELECT firstName, lastName, reportsTo FROM employees ORDER BY reportsTo asc;
+
+## DISTINCT
+SELECT DISTINCT lastname FROM employees ORDER BY lastname;
+
+SELECT DISTINCT state FROM customers;
+
+SELECT state, city FROM customers WHERE state IS NOT NULL ORDER BY state, city;
+
+## AND
+SELECT 1 AND NULL, NULL AND NULL;
+
+SELECT customername, country, state FROM customers WHERE country = 'USA' AND state = 'CA';
+
+SELECT customername, country, state, creditlimit FROM customers WHERE country = 'USA' AND state = 'CA' AND creditlimit > 100;
+
+## OR
+SELECT 1 OR 0 AND 0;
+
+SELECT customername, country FROM customers WHERE country = 'USA' or state = 'CA';
+
+SELECT customername, country, creditLimit FROM customers WHERE (country = 'USA' or country = 'France') and creditlimit > 100;
+
+## IN(NOT IN)
+SELECT state FROM customers WHERE state IN(NULL);
+
+SELECT officeCode, city, phone, country FROM offices WHERE country IN('USA','France');
+
+SELECT officeCode, city, phone, country FROM offices WHERE country NOT IN('USA','France') ORDER BY city;
+
+## BETWEEN
+SELECT productCode, productName, buyPrice FROM products WHERE buyPrice BETWEEN 90 and 100;
+
+SELECT orderNumber, requiredDate, status FROM Orders WHERE requiredDate BETWEEN '2003-01-01' and '2003-01-21';
+
+## LIKE
+SELECT employeeNumber, lastName, firstName FROM employees WHERE firstName LIKE 'a%';
+
+SELECT employeeNumber, lastName, firstName FROM employees WHERE lastName LIKE '%on';
+
+SELECT employeeNumber, lastName, firstName FROM employees WHERE lastName LIKE '%on%';
+
+SELECT employeeNumber, lastName, firstName FROM employees WHERE firstName LIKE 'T_m';
+
+SELECT employeeNumber, lastName, firstName FROM employees WHERE lastName NOT LIKE 'B%';
+
+SELECT productCode, productName FROM products WHERE productCode LIKE '%\_20%';
+
+## LIMIT
+SELECT customerNumber, customerName, creditLimit FROM customers ORDER BY creditLimit DESC LIMIT 5;
+
+## IS NULL
+SELECT customerName, country, salesrepemployeenumber FROM customers WHERE salesrepemployeenumber IS NOT NULL ORDER BY customerName;
+
+SELECT customerName, country, salesrepemployeenumber FROM customers WHERE salesrepemployeenumber IS NULL ORDER BY customerName;
+
+## ALLIAS
+SELECT concat(lastName,', ' ,firstName) as `Full Name` FROM employees ORDER BY `Full Name`;
+
+SELECT orderNumber as 'Order no', priceEach * quantityOrdered as 'Total' FROM orderdetails ORDER BY 1, 2;
+
+SELECT orderNumber as `Order no`, priceEach * quantityOrdered as `Total` FROM orderdetails ORDER BY `Order no`, `Total`;
+
+SELECT e.firstName, e.lastName FROM employees e ORDER BY e.firstName;
+
+## INNER JOIN
+SELECT productCode, productName, textDescription
+FROM products t1 INNER JOIN productlines t2
+WHERE t1.productline = t2.productline;
+
+SELECT productCode, productName, textDescription
+FROM products t1 INNER JOIN productlines t2
+ON t1.productline = t2.productline;
+
+SELECT productCode, productName, textDescription
+FROM products t1 INNER JOIN productlines t2
+USING(productline);
+
+SELECT t1.orderNumber, t1.status, SUM(quantityOrdered * priceEach) as total
+FROM orders t1 INNER JOIN orderdetails t2
+USING(orderNumber)
+GROUP BY orderNumber;
+
+SELECT *
+FROM orders t1 INNER JOIN orderdetails t2 
+USING(orderNumber) 
+INNER JOIN products t3
+USING(productCode);
+
+SELECT orderNumber, productName, msrp, priceEach
+FROM products p INNER JOIN orderdetails o USING(productcode)
+WHERE p.msrp > o.priceEach AND p.productcode = 'S10_1678';
+
+## LEFT JOIN
+SELECT c.customerNumber, c.customerName, o.orderNumber
+FROM customers c LEFT JOIN orders o
+USING(customerNumber);
+
+SELECT c.customerNumber, c.customerName, o.orderNumber, o.status
+FROM customers c LEFT JOIN orders o
+USING(customerNumber)
+WHERE o.orderNumber IS NULL;
+
+## RIGHT JOIN
+SELECT e1.employeeNumber, c1.customerNumber
+FROM customers c1 RIGHT JOIN employees e1
+ON c1.salesRepEmployeeNumber = e1.employeeNumber
+ORDER BY e1.employeeNumber;
+
+SELECT e1.employeeNumber, c1.customerNumber
+FROM customers c1 RIGHT JOIN employees e1
+ON c1.salesRepEmployeeNumber = e1.employeeNumber
+WHERE c1.customerNumber IS NULL
+ORDER BY e1.employeeNumber;
+
+## SELF JOIN
+SELECT concat_ws(', ', m.lastName, m.firstName) as Manager, concat(e.lastName, ', ', e.firstName) as `Direct report`
+FROM employees e INNER JOIN employees m
+ON m.employeeNumber = e.reportsTo
+ORDER BY Manager;
+
+SELECT city, c1.customerName, c2.customerName
+FROM customers c1 INNER JOIN customers c2
+USING(city)
+WHERE c1.customername < c2.customername
+ORDER BY city;
+
+## GROUP BY
+SELECT status
+FROM orders
+GROUP BY status;
+
+SELECT status, COUNT(*)
+FROM orders
+GROUP BY status;
+
+SELECT status, SUM(priceEach * quantityOrdered) as amount
+FROM orders o1 INNER JOIN orderdetails o2
+USING(orderNumber)
+GROUP BY status;
+
+SELECT YEAR(orderDate) as year, SUM(priceEach * quantityOrdered) as total
+FROM orders o1 INNER JOIN orderdetails o2
+USING(orderNumber)
+WHERE status = 'Shipped'
+GROUP BY YEAR(`orderDate`);
+
+SELECT YEAR(orderDate) as year, status, SUM(priceEach * quantityOrdered) as total
+FROM orders o1 INNER JOIN orderdetails o2
+USING(orderNumber)
+GROUP BY status, year
+ORDER BY year, status, total;
