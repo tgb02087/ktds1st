@@ -1,0 +1,177 @@
+use classicmodels;
+
+## HAVING
+SELECT orderNumber, SUM(quantityOrdered) as itemsCount, SUM(quantityOrdered*priceEach) as total
+FROM orderdetails
+GROUP BY orderNumber
+HAVING total >= 10000;
+
+SELECT orderNumber, SUM(quantityOrdered) as itemsCount, SUM(quantityOrdered*priceEach) as total
+FROM orderdetails
+GROUP BY orderNumber
+HAVING total >= 10000 and itemsCount >= 600;
+
+SELECT o1.orderNumber, o2.status, SUM(o1.quantityOrdered*o1.priceEach)
+FROM orderdetails o1 INNER JOIN orders o2
+USING(orderNumber)
+GROUP BY orderNumber
+HAVING status = 'Shipped';
+
+SELECT customerName, COUNT(*) as order_count
+FROM customers c1 INNER JOIN orders o1
+USING(customerNumber)
+GROUP BY customerName
+HAVING order_count > 4;
+
+## ROLLUP
+#CREATE TABLE sales
+SELECT productLine, YEAR(orderDate) as orderYear, SUM(priceEach * quantityOrdered) as orderValue
+FROM orders 
+INNER JOIN orderDetails USING(orderNumber)
+INNER JOIN products USING(productCode)
+GROUP BY productLine, orderYear;
+
+SELECT productLine, SUM(orderValue) as totalOrderValue
+FROM sales
+GROUP BY productLine;
+
+SELECT SUM(orderValue) as totalOrderValue
+FROM sales;
+
+SELECT productLine, orderYear, SUM(orderValue) as totalOrderValue
+FROM sales
+GROUP BY productLine, orderYear
+WITH ROLLUP
+
+SELECT orderYear, productLine, SUM(orderValue) as totalOrderValue
+FROM sales
+GROUP BY orderYear, productLine
+WITH ROLLUP
+
+## SubQuery
+-- SELECT customerNumber, checkNumber, amount
+-- FROM payments
+-- ORDER BY amount DESC
+-- LIMIT 1;
+
+SELECT customerNumber, checkNumber, amount
+FROM payments
+WHERE amount = (SELECT MAX(amount) FROM payments);
+
+SELECT customerNumber, checkNumber, amount
+FROM payments
+WHERE amount > (
+    SELECT AVG(amount)
+    FROM payments);
+
+SELECT customerName
+FROM customers
+WHERE customerNumber NOT IN(SELECT customerNumber FROM orders);
+
+SELECT MAX(items), MIN(items), FLOOR(AVG(items))
+FROM (SELECT orderNumber, Count(*) as items
+FROM orderdetails
+GROUP BY orderNumber) as lineItems;
+
+SELECT orderNumber, SUM(priceEach * quantityOrdered) as total
+FROM orders INNER JOIN orderdetails USING(orderNumber)
+GROUP BY orderNumber
+HAVING total > 60000
+
+SELECT customerNumber, customerName
+FROM customers
+WHERE EXISTS (
+    SELECT orderNumber, SUM(priceEach * quantityOrdered) as total
+    FROM orders INNER JOIN orderdetails USING(orderNumber)
+    WHERE customerNumber = customers.customerNumber
+    GROUP BY orderNumber
+    HAVING total > 60000
+)
+
+## 파생 테이블
+SELECT (
+    CASE 
+        WHEN quantityordered > 40 THEN '상'
+        WHEN quantityordered > 30 THEN '중'
+        ELSE '하'
+    END
+) as '등급'
+FROM orderdetails;
+
+SELECT productCode, SUM(priceEach * quantityordered) as sales
+FROM orders INNER JOIN orderdetails USING(orderNumber)
+WHERE YEAR(orderDate) = '2003'
+GROUP BY productCode
+ORDER BY sales DESC
+LIMIT 5
+
+SELECT productName, sales
+FROM (SELECT productCode, SUM(priceEach * quantityordered) as sales
+FROM orders INNER JOIN orderdetails USING(orderNumber)
+WHERE YEAR(orderDate) = '2003'
+GROUP BY productCode
+ORDER BY sales DESC
+LIMIT 5) as t1 
+INNER JOIN products USING(productCode)
+
+SELECT customerNumber, SUM(priceEach * quantityordered) as sales, (
+    CASE 
+        WHEN SUM(priceEach * quantityordered) >= 100000 THEN 'Platinum'
+        WHEN SUM(priceEach * quantityordered) >= 10000 THEN 'Gold'
+        ELSE 'Silver'
+    END
+) as customerGroup
+FROM orders INNER JOIN orderdetails USING(orderNumber)
+WHERE YEAR(orderDate) = '2003'
+GROUP BY customerNumber;
+
+SELECT customerGroup, COUNT(*) as groupCount
+FROM 
+(
+SELECT customerNumber, SUM(priceEach * quantityordered) as sales, (
+    CASE 
+        WHEN SUM(priceEach * quantityordered) >= 100000 THEN 'Platinum'
+        WHEN SUM(priceEach * quantityordered) >= 10000 THEN 'Gold'
+        ELSE 'Silver'
+    END
+) as customerGroup
+FROM orders INNER JOIN orderdetails USING(orderNumber)
+WHERE YEAR(orderDate) = '2003'
+GROUP BY customerNumber
+) as customerGoups
+GROUP BY customerGroup;
+
+## EXCEPT
+SELECT contactFirstName
+FROM customers
+EXCEPT
+SELECT firstName
+FROM employees
+
+SELECT firstName
+FROM employees
+EXCEPT
+SELECT contactFirstName
+FROM customers
+ORDER BY firstName;
+
+## INTERSECT
+SELECT contactFirstName
+FROM customers
+INTERSECT
+SELECT firstName
+FROM employees
+
+SELECT firstName
+FROM employees
+INTERSECT
+SELECT contactFirstName
+FROM customers
+ORDER BY firstName;
+
+## UNION
+SELECT firstName, lastName
+FROM employees
+UNION
+SELECT contactFirstName, contactLastName
+FROM customers
