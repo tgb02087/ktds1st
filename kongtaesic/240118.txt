@@ -1,0 +1,72 @@
+<실습>
+
+create table tasks (
+	id int auto_increment primary key,
+	title varchar(255) not null,
+	start_date date,
+	due_date date
+);
+
+create table checkList (
+	id int,
+	task_id int,
+	title varchar(255) not null,
+	is_completed boolean default false,
+	primary key (id, task_id),
+	foreign key (task_id) references tasks (id)
+	on update restrict
+	on delete cascade
+);
+
+create table contacts (
+	id int auto_increment primary key,
+	name varchar(255) not null,
+	email varchar(320) not null
+);
+
+insert into contacts(name, email) values('kong', 'kong@naver.com');
+insert into contacts(name, email) values('tae', 'tae@naver.com');
+insert into contacts(name, email) values('sic', 'sic@naver.com');
+
+CREATE TABLE vendors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    phone VARCHAR(15)
+);
+
+alter table vendors
+add column name varchar(16) after phone;
+
+CREATE TABLE posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    excerpt VARCHAR(400),
+    content TEXT,
+    created_at DATETIME,
+    updated_at DATETIME
+);
+
+alter table posts
+drop column excerpt;
+
+CREATE TABLE insurances (
+    id INT AUTO_INCREMENT,
+    title VARCHAR(100) NOT NULL,
+    effectiveDate DATE NOT NULL,
+    duration INT NOT NULL,
+    amount DEC(10 , 2 ) NOT NULL,
+    PRIMARY KEY(id)
+);
+
+drop table insurances;
+
+----------------------------------------
+<기능명세 작성 후 ERD 작성>
+
+주제 : 커뮤니티 플랫폼
+- 사용자가 글을 작성, 수정, 삭제할 수 있다.
+- 관리자가 게시판을 추가, 수정, 삭제할 수 있다.
+- 게시글에 댓글을 작성할 수 있다.
+- 댓글은 댓글 작성자가 수정, 삭제를 할 수 있다.
+- 게시글은 제목, 내용, 작성자, 작성일의 정보를 갖는다
+- 회원은 이름, 아이디, 비밀번호, 권한 정보를 갖는다
+- 게시글에 첨부파일을 추가할 수 있다.
