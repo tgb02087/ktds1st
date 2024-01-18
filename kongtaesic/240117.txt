@@ -1,0 +1,152 @@
+<필기>
+
+exists가 in보다 쿼리 속도가 빠르다.
+exists는 최소한 발견됨 원칙에 따라 작동. exists는 일치하는 행이 발견되면 테이블 검색이 중지됨.
+하지만 하위 쿼리에서 반환되는 결과 집합이 매우 작은 경우 in 연산자를 사용하는 쿼리가 더 빠름.
+
+----------------------------
+<실습>
+
+SELECT orderNumber, SUM(quantityOrdered) as 'itemCount', SUM(priceEach * quantityOrdered) as 'total' from orderdetails
+GROUP BY orderNumber
+HAVING `total` >= 10000;
+
+SELECT orderNumber, SUM(quantityOrdered) as 'itemCount', SUM(priceEach * quantityOrdered) as 'total' from orderdetails
+GROUP BY orderNumber
+HAVING `total` >= 10000 and `itemCount` >= 600;
+
+SELECT o.orderNumber, o.status, SUM(od.priceEach * od.quantityOrdered) as 'total'
+from orderdetails od
+join orders o USING(orderNumber)
+WHERE o.status = 'Shipped'
+GROUP BY od.orderNumber
+HAVING `total` >= 1500;
+
+select c.customerName, COUNT(o.orderNumber) as 'order_count' from customers c 
+join orders o USING(customerNumber)
+GROUP BY c.customerNumber
+HAVING `order_count` > 4
+ORDER BY `order_count`;
+
+CREATE TABLE sales
+select p.productLine, YEAR(o.orderDate) as 'orderYear', SUM(od.priceEach * od.quantityOrdered) as 'orderValue'  from products p 
+join orderdetails od USING(productCode)
+join orders o USING(orderNumber)
+GROUP BY p.productLine, YEAR(o.orderDate)
+ORDER BY YEAR(o.orderDate);
+
+select productLine, SUM(orderValue) as 'totalOrderValue' from sales
+GROUP BY productLine;
+
+select sum(orderValue) as 'totalOrderValue' from sales;
+
+select productLine, SUM(orderValue) as 'totalOrderValue' from sales
+GROUP BY productLine
+WITH ROLLUP;
+
+SELECT productLine, orderYear, SUM(orderValue) from sales
+GROUP BY productLine, orderYear
+WITH ROLLUP;
+
+SELECT orderYear, productLine, SUM(orderValue) from sales
+GROUP BY orderYear, productLine
+WITH ROLLUP;
+
+select customerNumber, checkNumber, amount from payments
+WHERE amount = (select max(amount) from payments);
+
+select customerNumber, checkNumber, amount from payments
+WHERE amount > (select avg(amount) from payments);
+
+select customerName from customers
+WHERE customerNumber NOT IN (select customerNumber from orders);
+
+select (select max(orderLineNumber) from orderdetails),
+ (select min(orderLineNumber) from orderdetails), 
+ (select FLOOR(avg(orderLineNumber)) from orderdetails);
+
+select od.orderNumber, SUM(od.priceEach * od.quantityOrdered) as 'total' from orderdetails od
+join orders o USING(orderNumber)
+GROUP BY o.orderNumber
+HAVING `total` > 60000;
+
+select customerNumber, customerName from customers
+WHERE EXISTS ( 
+    select od.orderNumber, SUM(od.priceEach * od.quantityOrdered) as 'total' from orderdetails od
+    join orders o USING(orderNumber)
+    WHERE o.customerNumber = customers.customerNumber
+    GROUP BY o.orderNumber
+    HAVING `total` > 60000 
+);
+
+select productCode, FLOOR(sum(od.priceEach * od.quantityOrdered)) as 'sales' from orders o
+join orderdetails od USING(orderNumber)
+WHERE YEAR(o.orderDate) = 2003
+GROUP BY productCode
+ORDER BY `sales` desc
+LIMIT 5;
+
+select p.productName, a.sales from (
+    select productCode, FLOOR(sum(od.priceEach * od.quantityOrdered)) as 'sales' from orders o
+    join orderdetails od USING(orderNumber)
+    WHERE YEAR(o.orderDate) = 2003
+    GROUP BY productCode
+    ORDER BY `sales` desc
+    LIMIT 5
+) a
+join products p USING(productCode);
+
+select a.customerNumber, a.sales, 
+CASE 
+    WHEN a.sales >= 100000 THEN 'Platinum' 
+    WHEN a.sales >= 10000 THEN 'Gold' 
+    ELSE  'Silver'
+END as 'customerGroup'
+from (
+    select customerNumber, ROUND(sum(od.priceEach * od.quantityOrdered), 2) as 'sales' from orders o
+    join orderdetails od USING(orderNumber)
+    WHERE YEAR(o.orderDate) = 2003
+    GROUP BY customerNumber
+    ORDER BY customerNumber
+) a;
+
+select customerGroup, COUNT(*) as 'groupCount'
+from (
+    select a.customerNumber, a.sales, 
+    CASE 
+        WHEN a.sales >= 100000 THEN 'Platinum' 
+        WHEN a.sales >= 10000 THEN 'Gold' 
+        ELSE  'Silver'
+    END as 'customerGroup'
+    from (
+        select customerNumber, ROUND(sum(od.priceEach * od.quantityOrdered), 2) as 'sales' from orders o
+        join orderdetails od USING(orderNumber)
+        WHERE YEAR(o.orderDate) = 2003
+        GROUP BY customerNumber
+        ORDER BY customerNumber
+    ) a
+) b
+GROUP BY customerGroup
+ORDER BY `groupCount` desc;
+
+select firstName from employees
+EXCEPT
+select contactFirstName from customers;
+
+select firstName from employees
+EXCEPT
+select contactFirstName from customers
+ORDER BY firstName;
+
+select firstName from employees
+INTERSECT
+select contactFirstName from customers;
+
+WITH RECURSIVE CTE AS (
+    SELECT 1 AS N
+    UNION ALL
+    SELECT N + 1
+    FROM CTE
+    WHERE N < 5
+)
+SELECT REPEAT("* ", N) FROM CTE;
